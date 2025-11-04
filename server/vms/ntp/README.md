@@ -150,8 +150,65 @@ sudo nano /etc/chrony/chrony.conf
 Contenido del archivo `chrony.conf`:
 
 ```conf
+confdir /etc/chrony/conf.d
 
+pool 0.south-america.pool.ntp.org iburst maxsources 2
+pool 1.south-america.pool.ntp.org iburst maxsources 2
+pool 2.co.pool.ntp.org iburst maxsources 2
+
+allow 192.168.0.0/16
+local stratum 10
+
+keyfile /etc/chrony/chrony.keys
+driftfile /var/lib/chrony/chrony.drift
+ntsdumpdir /var/lib/chrony
+logdir /var/log/chrony
+
+maxupdateskew 100.0
+rtcsync
+makestep 1 3
+
+leapsectz right/UTC
 ```
+
+Este archivo define cómo el demonio `chronyd` se comporta como cliente sincronizándose con _upstream pools_ y como servidor siriviendo para clientes internos.
+
+1. Configuración de Fuentes de Tiempo
+
+| Directiva           | Contenido                                               | Descripción                                                                                      |
+|---------------------|---------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| confdir             | /etc/chrony/conf.d                                      | Indica a chronyd que también lea archivos de configuración adicionales desde este directorio. |
+| pool                | 0.south-america.pool.ntp.org iburst maxsources 2        | Define una fuente de tiempo primaria usando el pool de servidores de Sudamérica.                |
+| pool                | 1.south-america.pool.ntp.org iburst maxsources 2        | Define una fuente de tiempo secundaria para redundancia.                                        |
+| pool                | 2.co.pool.ntp.org iburst maxsources 2                   | Define una fuente de tiempo específica para Colombia.                |
+| Opción iburst       | (Acompaña a cada pool)                                  | Permite a chronyd enviar un grupo inicial de paquetes NTP más grande al servidor al inicio, para la sincronización inicial y el tiempo de recuperación. |
+| Opción maxsources 2 | (Acompaña a cada pool)                                  | Limita el número de servidores seleccionados de cada pool a un máximo de 2, controlando el número total de conexiones upstream. |
+
+2. Control de Acceso para Clientes
+
+| Directiva           | Contenido                                               | Descripción                                                                                      |
+|---------------------|---------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| allow             | 192.168.0.0/16                                    | Permite a cualquier cliente con una dirección IP dentro del rango 192.168.0.0 a 192.168.255.255 (toda la red de clase B) consultar y sincronizar su hora con este servidor Chrony. |
+
+3. Estrato Local y Archivos de Operación
+
+| Directiva       | Contenido                          | Descripción                                                                                                                                                                                                 |
+|-----------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| local stratum 10| Define el Estrato que el servidor reportará a sus clientes internos si por alguna razón pierde la conexión con sus fuentes upstream. |
+| keyfile         | /etc/chrony/chrony.keys            | Especifica la ubicación del archivo que contiene las claves de autenticación NTP.                                                                                                               |
+| driftfile       | /var/lib/chrony/chrony.drift       | Almacena la tasa de error del reloj local del sistema (drift). se utiliza para ajustar la frecuencia del reloj del sistema al reiniciar, antes de consultar las fuentes NTP externas. |
+| ntsdumpdir      | /var/lib/chrony                    | Directorio donde se guardan los datos de estado para el protocolo NTS (Network Time Security)                                   |
+| logdir          | /var/log/chrony                    | Especifica el directorio para los archivos de log de Chrony.                                                                                                                                                |
+4. Ajustes de Sincronización
+
+| Directiva     | Contenido     | Descripción                                                                                                                                                                                                                                                                         |
+|---------------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| maxupdateskew | 100.0         | Define el umbral de desajuste máximo (en partes por millón - ppm) que se permite para las fuentes NTP. Si una fuente tiene un skew mayor, se ignora.                                                                                                                             |
+| rtcsync       | (Sin valor)   | Habilita la sincronización del Reloj de Tiempo Real (RTC) del hardware con la hora del sistema.                                                                                                 |
+| makestep      | 1 3           | Es el "salto de hora". Si el desajuste entre la hora actual y la hora de referencia es mayor a 1 segundo después de los primeros 3 ajustes de sincronización, chronyd ajustará la hora inmediatamente (un "salto") en lugar de ajustarla lentamente. |
+| leapsectz     | right/UTC     | Configura el manejo de segundos leap seconds usando el archivo de zona horaria para obtener información de segundos "intercalares".                                                                                                                      |
+
+
 
 Aplicar cambios de configuración:
 
@@ -340,3 +397,4 @@ sudo journalctl -u chrony -n 50 -f
 |----------|--------|-----------|-----------|-----------|
 | NTP | 123 | UDP | Bidireccional | Sincronización de tiempo |
 | NTP | 123 | TCP | Fallback | Sincronización alternativa |
+
