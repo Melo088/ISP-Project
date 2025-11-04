@@ -1,0 +1,17 @@
+network:
+  version: 2
+  renderer: networkd
+
+  ethernets:
+    enp0s3:
+      dhcpv4: no
+      addresses:
+        - 192.168.20.60/24
+
+      routes:
+        - to: default
+          via: 192.168.20.1
+
+      nameservers:
+        addresses:
+          - 192.168.20.20
