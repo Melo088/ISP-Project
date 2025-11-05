@@ -9,7 +9,7 @@ www.gponlab.local {
     tls internal
     encode zstd gzip
     
-    reverse_proxy http://web-server-1.gponlab.local:80 http://web-server-2.gponlab.local:80 {
+    reverse_proxy http://192.168.50.10:80 http://192.168.50.11:80 {
         lb_policy round_robin
         
         health_uri /health
