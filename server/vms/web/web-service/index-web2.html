@@ -1,223 +1,244 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPON Lab - Servidor 2</title>
+    <title>GPON Lab - WEB2</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-        }
-        
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 40px 20px;
             max-width: 900px;
-            width: 100%;
+            margin: 0 auto;
+            line-height: 1.6;
+            color: #333;
         }
-        
         h1 {
-            color: #667eea;
             margin-bottom: 10px;
-            font-size: 2.5em;
+            font-size: 2em;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
         }
-        
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 1.1em;
-        }
-        
-        .status {
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            text-align: center;
+        h2 {
+            margin-top: 30px;
+            margin-bottom: 15px;
             font-size: 1.3em;
-            font-weight: bold;
         }
-        
-        .server-badge {
-            display: inline-block;
-            background: #FF6B6B;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            margin-left: 10px;
+        .server-info {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #333;
         }
-        
-        .info-grid {
+        .server-info p {
+            margin: 5px 0;
+        }
+        .description {
+            margin: 30px 0;
+            text-align: justify;
+        }
+        .topology {
+            margin: 30px 0;
+            padding: 20px;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+        .topology svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .device-list {
+            margin: 20px 0;
+        }
+        .device-list ul {
+            list-style-position: inside;
+            margin-left: 20px;
+        }
+        .device-list li {
+            margin: 8px 0;
+        }
+        .services-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-            margin: 30px 0;
+            margin: 20px 0;
         }
-        
-        .info-card {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .info-card strong {
-            display: block;
-            color: #667eea;
-            margin-bottom: 5px;
-            font-size: 0.9em;
-        }
-        
-        .info-card span {
-            color: #333;
-            font-size: 1.1em;
-        }
-        
-        .services {
-            margin: 30px 0;
-        }
-        
-        .services h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-        
-        .services ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .services li {
-            padding: 10px;
-            margin: 8px 0;
+        .service-card {
             background: #f9f9f9;
-            border-radius: 5px;
-            border-left: 3px solid #FF6B6B;
+            padding: 12px;
+            border: 1px solid #ddd;
         }
-        
-        .services li:before {
-            content: "- ";
-            color: #FF6B6B;
-            font-weight: bold;
-            margin-right: 10px;
+        .service-card strong {
+            display: block;
+            margin-bottom: 5px;
         }
-        
-        .protocol-info {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            border: 2px solid #2196F3;
-        }
-        
-        .footer {
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
             text-align: center;
-            margin-top: 30px;
-            color: #999;
+            color: #666;
             font-size: 0.9em;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>GPON Lab <span class="server-badge">WEB2</span></h1>
-        <p class="subtitle">Infraestructura de Red Academica con QUIC/HTTP3</p>
-        
-        <div class="status">
-            Servidor Espejo Activo
-        </div>
-        
-        <div class="info-grid">
-            <div class="info-card">
-                <strong>Servidor</strong>
-                <span>web-server-2.gponlab.local</span>
+    <h1>GPON Lab - Academic Network</h1>
+    
+    <div class="server-info">
+        <p><strong>Server:</strong> web2.gponlab.local</p>
+        <p><strong>IPv4:</strong> 192.168.50.11</p>
+        <p><strong>IPv6:</strong> 2001:db8:50::11</p>
+        <p id="protocol-info"><strong>Protocol:</strong> Detecting...</p>
+    </div>
+
+    <div class="description">
+        <h2>Project Description</h2>
+        <p>
+            Implementation of a GPON (Gigabit Passive Optical Network) for academic environment, 
+            integrating physical devices and virtualized services on Ubuntu Server virtual machines.
+        </p>
+    </div>
+
+    <div class="device-list">
+        <h2>Physical Devices</h2>
+        <ul>
+            <li><strong>ONTs</strong> - Optical Network Terminals (end clients)</li>
+            <li><strong>OLT</strong> - Optical Line Terminal (GPON headend)</li>
+            <li><strong>Switch</strong> - Managed switch with VLAN and trunk support</li>
+            <li><strong>Internal Router</strong> - Project router with VLAN interfaces</li>
+            <li><strong>University Router</strong> - Internet connection (University Network)</li>
+            <li><strong>Physical Server(s)</strong> - Ubuntu Server</li>
+        </ul>
+    </div>
+
+    <div class="topology">
+        <h2>Network Topology</h2>
+        <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+            <!-- Internet Cloud -->
+            <ellipse cx="400" cy="50" rx="60" ry="30" fill="none" stroke="#333" stroke-width="2"/>
+            <text x="400" y="55" text-anchor="middle" font-size="14">Internet</text>
+            
+            <!-- University Router -->
+            <rect x="360" y="110" width="80" height="40" fill="none" stroke="#333" stroke-width="2"/>
+            <text x="400" y="135" text-anchor="middle" font-size="12">Univ Router</text>
+            
+            <!-- Internal Router -->
+            <rect x="360" y="200" width="80" height="40" fill="none" stroke="#333" stroke-width="2"/>
+            <text x="400" y="225" text-anchor="middle" font-size="12">Int Router</text>
+            
+            <!-- Switch -->
+            <rect x="360" y="290" width="80" height="40" fill="none" stroke="#333" stroke-width="2"/>
+            <text x="400" y="315" text-anchor="middle" font-size="12">Switch</text>
+            
+            <!-- OLT -->
+            <rect x="200" y="380" width="80" height="40" fill="none" stroke="#333" stroke-width="2"/>
+            <text x="240" y="405" text-anchor="middle" font-size="12">OLT</text>
+            
+            <!-- Server -->
+            <rect x="520" y="380" width="80" height="40" fill="none" stroke="#333" stroke-width="2"/>
+            <text x="560" y="405" text-anchor="middle" font-size="12">Server</text>
+            
+            <!-- ONTs -->
+            <rect x="100" y="460" width="50" height="30" fill="none" stroke="#333" stroke-width="1.5"/>
+            <text x="125" y="480" text-anchor="middle" font-size="11">ONT</text>
+            
+            <rect x="175" y="460" width="50" height="30" fill="none" stroke="#333" stroke-width="1.5"/>
+            <text x="200" y="480" text-anchor="middle" font-size="11">ONT</text>
+            
+            <rect x="250" y="460" width="50" height="30" fill="none" stroke="#333" stroke-width="1.5"/>
+            <text x="275" y="480" text-anchor="middle" font-size="11">ONT</text>
+            
+            <!-- Connections -->
+            <!-- Internet to Univ Router -->
+            <line x1="400" y1="80" x2="400" y2="110" stroke="#333" stroke-width="2"/>
+            
+            <!-- Univ Router to Int Router -->
+            <line x1="400" y1="150" x2="400" y2="200" stroke="#333" stroke-width="2"/>
+            
+            <!-- Int Router to Switch -->
+            <line x1="400" y1="240" x2="400" y2="290" stroke="#333" stroke-width="2"/>
+            
+            <!-- Switch to OLT -->
+            <line x1="380" y1="330" x2="260" y2="380" stroke="#333" stroke-width="2"/>
+            
+            <!-- Switch to Server -->
+            <line x1="420" y1="330" x2="540" y2="380" stroke="#333" stroke-width="2"/>
+            
+            <!-- OLT to ONTs (fiber) -->
+            <line x1="240" y1="420" x2="125" y2="460" stroke="#e74c3c" stroke-width="2" stroke-dasharray="5,5"/>
+            <line x1="240" y1="420" x2="200" y2="460" stroke="#e74c3c" stroke-width="2" stroke-dasharray="5,5"/>
+            <line x1="240" y1="420" x2="275" y2="460" stroke="#e74c3c" stroke-width="2" stroke-dasharray="5,5"/>
+            
+            <!-- Legend -->
+            <text x="650" y="450" font-size="11" fill="#333">━━ Ethernet</text>
+            <line x1="620" y1="445" x2="640" y2="445" stroke="#333" stroke-width="2"/>
+            
+            <text x="650" y="475" font-size="11" fill="#e74c3c">┉┉ Fiber</text>
+            <line x1="620" y1="470" x2="640" y2="470" stroke="#e74c3c" stroke-width="2" stroke-dasharray="5,5"/>
+        </svg>
+    </div>
+
+    <div class="services">
+        <h2>Virtualized Services</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <strong>DHCP (KEA)</strong>
+                <span>Dynamic IP assignment</span>
             </div>
-            <div class="info-card">
-                <strong>Direccion IPv4</strong>
-                <span>192.168.50.11</span>
+            <div class="service-card">
+                <strong>LibreQoS</strong>
+                <span>Bandwidth control & QoS</span>
             </div>
-            <div class="info-card">
-                <strong>Direccion IPv6</strong>
-                <span>2001:db8:50::11</span>
+            <div class="service-card">
+                <strong>FreeRADIUS</strong>
+                <span>AAA (Authentication, Authorization, Accounting)</span>
             </div>
-            <div class="info-card">
-                <strong>Red</strong>
-                <span>VLAN 50 - GPON</span>
+            <div class="service-card">
+                <strong>BIND9</strong>
+                <span>DNS resolution</span>
             </div>
-        </div>
-        
-        <div class="services">
-            <h2>Servicios Disponibles</h2>
-            <ul>
-                <li>Servidor Web con Caddy + QUIC</li>
-                <li>Soporte HTTP/3 (h3)</li>
-                <li>Alta disponibilidad con failover</li>
-                <li>Health checks automaticos</li>
-                <li>Load balancing con proxy inverso</li>
-                <li>Monitoreo en tiempo real</li>
-            </ul>
-        </div>
-        
-        <div class="protocol-info" id="protocol-info">
-            <strong>Informacion de Protocolo:</strong>
-            <p id="protocol-details">Detectando protocolo...</p>
-        </div>
-        
-        <div class="footer">
-            <p>Proyecto Academico - Implementacion GPON</p>
-            <p>Universidad - 2025</p>
+            <div class="service-card">
+                <strong>Chrony</strong>
+                <span>NTP time synchronization</span>
+            </div>
+            <div class="service-card">
+                <strong>LibreNMS</strong>
+                <span>SNMP network monitoring</span>
+            </div>
+            <div class="service-card">
+                <strong>Grafana/Prometheus</strong>
+                <span>Metrics collection & visualization</span>
+            </div>
         </div>
     </div>
-    
+
+    <footer>
+        <p>GPON Academic Project · 2025</p>
+        <p>Ubuntu Server Infrastructure</p>
+    </footer>
+
     <script>
         if (window.performance && performance.getEntriesByType) {
             const navTiming = performance.getEntriesByType('navigation')[0];
             if (navTiming && navTiming.nextHopProtocol) {
                 const protocol = navTiming.nextHopProtocol;
                 let protocolName = protocol;
-                let protocolColor = '#2196F3';
-                
+
                 if (protocol === 'h3' || protocol === 'h3-29' || protocol === 'h3-32') {
-                    protocolName = 'HTTP/3 sobre QUIC (UDP)';
-                    protocolColor = '#4CAF50';
+                    protocolName = 'HTTP/3 (QUIC/UDP)';
                 } else if (protocol === 'h2') {
                     protocolName = 'HTTP/2 (TCP)';
                 } else if (protocol === 'http/1.1') {
                     protocolName = 'HTTP/1.1 (TCP)';
                 }
-                
-                document.getElementById('protocol-details').innerHTML = 
-                    '<span style="color: ' + protocolColor + '; font-weight: bold;">' + 
-                    protocolName + '</span><br>' +
-                    '<small>Protocolo de red: ' + protocol + '</small>';
+
+                document.getElementById('protocol-info').innerHTML =
+                    '<strong>Protocol:</strong> ' + protocolName;
             }
         }
-        
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                if (window.performance) {
-                    const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
-                    document.getElementById('protocol-info').innerHTML += 
-                        '<br><small>Tiempo de carga: ' + loadTime + 'ms</small>';
-                }
-            }, 100);
-        });
     </script>
 </body>
 </html>
