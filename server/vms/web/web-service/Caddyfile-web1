@@ -1,21 +1,22 @@
+# /etc/caddy/Caddyfile
 {
     log {
         level INFO
     }
 }
 
+# Escuchar en el puerto 80 para tráfico interno desde el LB
 :80 {
-    bind web-server-1.gponlab.local
-    
+
     root * /var/www/gponlab
     file_server
-    
+
     handle /health {
-        respond "OK - web1 healthy" 200
+        respond "OK - web2 healthy" 200
     }
-    
+
     log {
-        output file /var/log/caddy/web1-access.log {
+        output file /var/log/caddy/web2-access.log {
             roll_size 10mb
             roll_keep 5
         }
