@@ -147,14 +147,14 @@ EA5800-X2(config)# vlan 100 smart
 
 ```shell
 EA5800-X2(config)# interface gpon 0/1
-EA5800-X2(config-if-gpon-0/1)# ont add 0 1 sn-auth "485754436B886FA5" omci ont-lineprofile-id 3 ont-srvprofile-id 3 desc "ONT_NO_DESCRIPTION"
+EA5800-X2(config-if-gpon-0/1)# ont add 0 1 sn-auth "<ONT Serial Number>" omci ont-lineprofile-id 3 ont-srvprofile-id 3 desc "ONT_NO_DESCRIPTION"
 ```
 
 **Parámetros:**
 - Puerto GPON: 0/1
 - PON Port: 0
 - ONT ID: 1
-- Serial Number: 485754436B886FA5
+- Serial Number: X
 - Protocolo: OMCI (ONU Management and Control Interface)
 
 #### 6. Service Port
@@ -544,6 +544,7 @@ end
 - IEEE 802.1Q VLAN Tagging Standard
 - ITU-T G.984 GPON Recommendations
 - Cisco SG350X Administration Guide
+
 
 
 
