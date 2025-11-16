@@ -1,10 +1,20 @@
 network:
   version: 2
   ethernets:
-    eth1:
-      addresses: [192.168.20.2/24]
+    enp0s3:
+      addresses: 
+        - 192.168.20.2/24
+        - 2001:db8:20::2/64
       routes:
         - to: default
           via: 192.168.20.1
+        - to: default
+          via: 2001:db8:20::1
       nameservers:
-        addresses: [8.8.8.8, 8.8.4.4]
+        addresses:
+          - 192.168.20.20
+          - 2001:db8:20::20
+          - 192.168.20.21
+          - 2001:db8:20::21
+        search:
+          - gponlab.local
