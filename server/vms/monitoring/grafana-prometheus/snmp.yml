@@ -1,0 +1,32 @@
+auths:
+  public_v2:
+    community: gponrouter
+    version: 2
+modules:
+  mikrotik:
+    walk:
+    # System OIDs
+    – 1.3.6.1.2.1.1.5.0 # Identity (Nombre del equipo)
+    – 1.3.6.1.4.1.14988.1.1.3.100.1.3.17 # Health (Temperatura del equipo)
+
+    # Interfaces OIDs
+    – 1.3.6.1.2.1.2.2.1.2.1 # interface_name (nombre de la interfaz)
+    – 1.3.6.1.2.1.31.1.1.1.6.1 # bytes-in (Bytes recibidos en interfaz)
+    – 1.3.6.1.2.1.31.1.1.1.10.1 # bytes-out (Bytes enviados en interfaz)
+
+    metrics:
+    – name: identity
+      oid: 1.3.6.1.2.1.1.5.0
+      type: DisplayString
+    – name: temperature
+      oid: 1.3.6.1.4.1.14988.1.1.3.100.1.3.17
+      type: gauge
+    – name: ifaceName
+      oid: 1.3.6.1.2.1.2.2.1.2.1
+      type: DisplayString
+    – name: bytesIn
+      oid: 1.3.6.1.2.1.31.1.1.1.6.1
+      type: gauge
+    – name: bytesOut
+      oid: 1.3.6.1.2.1.31.1.1.1.10.1
+      type: gauge
