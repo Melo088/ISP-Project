@@ -1,0 +1,96 @@
+config-file-header
+switch887629
+v2.4.5.71 / RTESLA2.4.5_930_181_144
+CLI v1.0
+file SSD indicator encrypted
+@
+!
+unit-type-control-start 
+unit-type unit 1 network gi uplink te 
+unit-type unit 2 network gi uplink te 
+unit-type unit 3 network gi uplink te 
+unit-type unit 4 network gi uplink te 
+unit-type-control-end 
+!
+vlan database
+vlan 10,20,30,40,50,100 
+exit
+voice vlan oui-table add 0001e3 Siemens_AG_phone________
+voice vlan oui-table add 00036b Cisco_phone_____________
+voice vlan oui-table add 00096e Avaya___________________
+voice vlan oui-table add 000fe2 H3C_Aolynk______________
+voice vlan oui-table add 0060b9 Philips_and_NEC_AG_phone
+voice vlan oui-table add 00d01e Pingtel_phone___________
+voice vlan oui-table add 00e075 Polycom/Veritel_phone___
+voice vlan oui-table add 00e0bb 3Com_phone______________
+bonjour interface range vlan 1
+hostname switch887629
+snmp-server server
+snmp-server community gponSwitch ro 192.168.20.40 mask 255.255.255.0 view Default 
+snmp-server group gponSwitch v2 read All 
+sntp server 192.168.20.60 
+!
+interface vlan 1
+ no ip address dhcp 
+!
+interface vlan 10
+ name Gestion 
+ ip address 192.168.10.253 255.255.255.0 
+!
+interface vlan 20
+ name Servicios_Core 
+!
+interface vlan 40
+ name Correo 
+!
+interface vlan 50
+ name Web 
+!
+interface vlan 100
+ name Clientes_GPON 
+!
+interface GigabitEthernet1/0/1
+ description OLT_CLIENTES_GPON
+ spanning-tree link-type point-to-point 
+ switchport mode trunk 
+!
+interface GigabitEthernet1/0/2
+ description ROUTER_LAN
+ spanning-tree link-type point-to-point 
+ switchport mode trunk 
+ macro description "switch "
+ !next command is internal.
+ macro auto smartport dynamic_type switch 
+!
+interface GigabitEthernet1/0/8
+ switchport access vlan 20 
+!
+interface GigabitEthernet1/0/9
+ description WebServer
+ switchport access vlan 50 
+!
+interface GigabitEthernet1/0/10
+ description SERVIDOR
+ switchport access vlan 20 
+ no macro auto smartport 
+!
+interface GigabitEthernet1/0/11
+ switchport access vlan 40 
+!
+interface GigabitEthernet1/0/15
+ switchport access vlan 100 
+!
+interface GigabitEthernet1/0/17
+ spanning-tree link-type point-to-point 
+ switchport mode trunk 
+ macro description switch
+ !next command is internal.
+ macro auto smartport dynamic_type switch 
+!
+interface TengigabitEthernet1/0/1
+ spanning-tree link-type point-to-point 
+ switchport mode trunk 
+ macro description switch
+!
+exit
+ip default-gateway 192.168.10.1 
