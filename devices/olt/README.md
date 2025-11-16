@@ -92,44 +92,52 @@ DBA se basa en la asignación de ancho de banda en intervalos de microsegundos:
 #### 1. Perfiles DBA
 
 ```shell
-EA5800-X2(config)# dba-profile add profile-id 12 profile-name "ftthdba" type3 assure 8192 max 20480
+EA5800-X2(config)# dba-profile add profile-id 12 profile-name "ftthdba" type3 assure 8192 max 97280
 ```
 
 **Parámetros configurados:**
 - Type 3: Non-assured (sin garantía fija)
 - Assure: 8192 kbps (8 Mbps garantizados)
-- Max: 20480 kbps (20 Mbps máximo)
+- Max: 97280 kbps (95 Mbps máximo)
 
 #### 2. Line Profile
 
 ```shell
 EA5800-X2(config)# ont-lineprofile gpon profile-id 3 profile-name "ftth"
+EA5800-X2(ont-lineprofile-3)# omcc encrypt on
 EA5800-X2(ont-lineprofile-3)# tcont 4 dba-profile-id 12
 EA5800-X2(ont-lineprofile-3)# gem add 14 eth tcont 4 encrypt on
+EA5800-X2(ont-lineprofile-3)# gem add 15 eth tcont 4 encrypt on
 EA5800-X2(ont-lineprofile-3)# gem mapping 14 0 vlan 100
 EA5800-X2(ont-lineprofile-3)# commit
 EA5800-X2(ont-lineprofile-3)# quit
 ```
 
 **Explicación:**
+- `omcc encrypt on`: Habilita encriptación OMCI para seguridad del canal de gestión
 - `tcont 4`: Crea T-CONT con ID 4 asociado al DBA profile 12
 - `gem add 14`: Crea GEM Port 14 tipo Ethernet en T-CONT 4 con encriptación
+- `gem add 15`: Crea GEM Port 15 adicional (reservado para servicios futuros)
 - `gem mapping 14 0 vlan 100`: Mapea GEM Port 14 a VLAN 100
 
 #### 3. Service Profile
 
 ```shell
 EA5800-X2(config)# ont-srvprofile gpon profile-id 3 profile-name "ftth"
-EA5800-X2(config-gpon-srvprofile-3)# ont-port eth adaptive pots adaptive
+EA5800-X2(config-gpon-srvprofile-3)# ont-port eth adaptive 8
+EA5800-X2(config-gpon-srvprofile-3)# transparent enable
 EA5800-X2(config-gpon-srvprofile-3)# commit
 EA5800-X2(config-gpon-srvprofile-3)# quit
 ```
 
-**Nota:** Este perfil activa puertos Ethernet en modo adaptativo (8 puertos máximo).
+**Nota:**
+- `ont-port eth adaptive 8`: Activa hasta 8 puertos Ethernet en modo adaptativo
+- `transparent enable`: Habilita transmisión transparente de paquetes en la ONT
 
 #### 4. Creación de VLAN
 
 ```shell
+EA5800-X2(config)# vlan 10 smart
 EA5800-X2(config)# vlan 100 smart
 ```
 
@@ -138,11 +146,13 @@ EA5800-X2(config)# vlan 100 smart
 #### 5. Aprovisionamiento de ONT
 
 ```shell
-EA5800-X2(config-if-gpon-0/1)# ont add 0 1 sn-auth 485754436B886FA5 omci ont-lineprofile-id 3 ont-srvprofile-id 3 desc "Cliente-VLAN100"
+EA5800-X2(config)# interface gpon 0/1
+EA5800-X2(config-if-gpon-0/1)# ont add 0 1 sn-auth "485754436B886FA5" omci ont-lineprofile-id 3 ont-srvprofile-id 3 desc "ONT_NO_DESCRIPTION"
 ```
 
 **Parámetros:**
-- Puerto GPON: 0/1/0
+- Puerto GPON: 0/1
+- PON Port: 0
 - ONT ID: 1
 - Serial Number: 485754436B886FA5
 - Protocolo: OMCI (ONU Management and Control Interface)
@@ -150,23 +160,30 @@ EA5800-X2(config-if-gpon-0/1)# ont add 0 1 sn-auth 485754436B886FA5 omci ont-lin
 #### 6. Service Port
 
 ```shell
-EA5800-X2(config)# service-port vlan 100 gpon 0/1/0 ont 1 gemport 14 multi-service user-vlan 100 tag-transform translate
+EA5800-X2(config)# service-port 4 vlan 100 gpon 0/1/0 ont 1 gemport 14 multi-service user-vlan 100 tag-transform transparent inbound traffic-table index 200 outbound traffic-table index 200
 ```
 
-**Funcionamiento de `tag-transform translate`:**
+**Funcionamiento de `tag-transform transparent`:**
 
-| Direction | Behavior |
-|-----------|----------|
-| Upstream (OLT → Network) | Recibe frames de GEM Port 14, reinserta tag 802.1Q VLAN 100, envía al puerto Ethernet como tagged |
-| Downstream (Network → OLT → ONU) | Recibe frames tagged VLAN 100, remueve el tag, encapsula en GEM Port 14 hacia la ONU |
+| Direction                        | Behavior                                                                     |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| Upstream (ONT → OLT → Network)   | Recibe frames del GEM Port 14 y los transmite sin modificar el tag VLAN      |
+| Downstream (Network → OLT → ONT) | Recibe frames VLAN 100 y los transmite sin modificación hacia el GEM Port 14 |
+
+A diferencia de `translate`, el modo `transparent` NO modifica los tags VLAN, manteniendo la estructura original de etiquetado
+
+**Traffic Table Index 200**
+- Aplica control de tráfico tanto en dirección inbound como outbound
+- CIR: 10240 kbps (10 Mbps garantizado)
+- PIR: 102400 kbps (100 Mbps burst máximo)
 
 #### 7. Configuración de Native VLAN en Puertos ONT
 
 ```shell
-EA5800-X2(config-if-gpon-0/1)# ont port native-vlan 0 1 eth 1 vlan 100
-EA5800-X2(config-if-gpon-0/1)# ont port native-vlan 0 1 eth 2 vlan 100
-EA5800-X2(config-if-gpon-0/1)# ont port native-vlan 0 1 eth 3 vlan 100
-EA5800-X2(config-if-gpon-0/1)# ont port native-vlan 0 1 eth 4 vlan 100
+EA5800-X2(config-if-gpon-0/1)# ont port native-vlan 0 1 eth 1 vlan 100 priority 0
+EA5800-X2(config-if-gpon-0/1)# ont port native-vlan 0 1 eth 2 vlan 100 priority 0
+EA5800-X2(config-if-gpon-0/1)# ont port native-vlan 0 1 eth 3 vlan 100 priority 0
+EA5800-X2(config-if-gpon-0/1)# ont port native-vlan 0 1 eth 4 vlan 100 priority 0
 ```
 
 **Efecto:** Todos los puertos Ethernet de la ONT tratan el tráfico untagged como VLAN 100.
@@ -174,10 +191,26 @@ EA5800-X2(config-if-gpon-0/1)# ont port native-vlan 0 1 eth 4 vlan 100
 #### 8. Configuración de Puerto Uplink
 
 ```shell
+EA5800-X2(config)# port vlan 100 0/3 0
 EA5800-X2(config)# port vlan 100 0/4 1
+EA5800-X2(config)# port vlan 10 0/4 1
 ```
 
-**Nota:** Asigna el puerto 0/4/1 como miembro de VLAN 100 (conexión hacia el switch).
+**Explicación:**
+- Puerto 0/3/0: Uplink principal para VLAN 100 (tráfico clientes)
+- Puerto 0/4/1: Uplink secundario para VLAN 100 y VLAN 10 (gestión)
+
+#### 9. Interface de Gestión
+```shell
+EA5800-X2(config)# interface Vlanif10
+EA5800-X2(config-if-Vlanif10)# ip address 192.168.10.250 255.255.255.0 description "OLT_Management_Interface"
+EA5800-X2(config-if-Vlanif10)# quit
+```
+
+#### 10. Ruta Estática
+```shell
+EA5800-X2(config)# ip route-static 0.0.0.0 0.0.0.0 192.168.10.1
+```
 
 ---
 
@@ -206,17 +239,17 @@ La configuración de la ONT se realizó mediante interfaz web con usuario admini
 
 **Ubicación:** WAN → WAN Configuration → New
 
-| Parameter | Value |
-|-----------|-------|
-| Enable WAN | Checked |
-| Encapsulation Mode | IPoE |
-| Protocol Type | IPv4 |
-| WAN Mode | Bridge WAN |
-| Service Type | INTERNET |
-| Enable VLAN | Checked |
-| VLAN ID | 100 |
-| 802.1p Priority | 0 |
-| Binding Options | LAN1, LAN2, LAN3, LAN4, SSID1 (2.4GHz), SSID5 (5GHz) |
+| Parameter          | Value                                                |
+| ------------------ | ---------------------------------------------------- |
+| Enable WAN         | Checked                                              |
+| Encapsulation Mode | IPoE                                                 |
+| Protocol Type      | IPv4                                                 |
+| WAN Mode           | Bridge WAN                                           |
+| Service Type       | INTERNET                                             |
+| Enable VLAN        | Checked                                              |
+| VLAN ID            | 100                                                  |
+| 802.1p Priority    | 0                                                    |
+| Binding Options    | LAN1, LAN2, LAN3, LAN4, SSID1 (2.4GHz), SSID5 (5GHz) |
 
 Al seleccionar "Bridge WAN", la sección de configuración IPv4 desaparece, lo cual es correcto.
 
@@ -229,22 +262,20 @@ Al seleccionar "Bridge WAN", la sección de configuración IPv4 desaparece, lo c
 
 **Propósito:** La ONT actúa como bridge transparente. El servidor DHCP es el router MikroTik.
 
-#### 5. Cambio de IP de Gestión (Opcional)
-
-**Ubicación:** LAN → LAN Host Configuration
-
-- Primary IP Address: 192.168.100.254
-- Subnet Mask: 255.255.255.0
-
-**Nota:** Permite acceder a la ONT desde la red principal sin conflictos.
-
 ---
 
 ### Configuración en Switch (Cisco SG350X-24)
 
 #### Puerto hacia OLT (GigabitEthernet1/0/1)
 
-No se debe aplicar la configuración de "native VLAN", es incorrecto debido a que el switch esperará tráfico untagged en VLAN 100, cuando en realidad la OLT envía tráfico tagged.
+```shell
+interface GigabitEthernet1/0/1
+description OLT_UPLINK
+switchport mode trunk
+switchport trunk allowed vlan add 100
+spanning-tree link-type point-to-point
+```
+ NO configurar native VLAN en este puerto. El OLT envía tráfico tagged VLAN 100.
 
 #### Puerto hacia Router (GigabitEthernet1/0/2)
 
@@ -252,10 +283,12 @@ No se debe aplicar la configuración de "native VLAN", es incorrecto debido a qu
 interface GigabitEthernet1/0/2
 description ROUTER_LAN
 switchport mode trunk
+switchport trunk allowed vlan add 100
 spanning-tree link-type point-to-point
 ```
 
-**Nota:** Modo trunk permite múltiples VLANs entre switch y router.
+Modo trunk permite múltiples VLANs entre switch y router
+
 
 ---
 
@@ -269,14 +302,18 @@ sequenceDiagram
     participant SW as Switch
     participant RTR as Router MikroTik
 
-    PC->>ONT: DHCP Discover (broadcast)
-    ONT->>OLT: Encapsula en GEM Port 14
+    PC->>ONT: DHCP Discover (untagged)
+    Note over ONT: Native VLAN 100<br/>agrega tag
+    ONT->>OLT: Encapsula en GEM Port 14<br/>VLAN 100
+    Note over OLT: tag-transform transparent<br/>NO modifica tag
     OLT->>SW: Frame tagged VLAN 100
     SW->>RTR: Frame tagged VLAN 100
     RTR->>SW: DHCP Offer (192.168.100.x)
     SW->>OLT: Frame tagged VLAN 100
+    Note over OLT: tag-transform transparent<br/>mantiene tag VLAN 100
     OLT->>ONT: Desencapsula de GEM Port 14
-    ONT->>PC: DHCP Offer
+    Note over ONT: Native VLAN 100<br/>remueve tag
+    ONT->>PC: DHCP Offer (untagged)
     PC->>ONT: DHCP Request
     Note over PC,RTR: Proceso continúa hasta asignación IP
     RTR-->>PC: IP: 192.168.100.x/24<br/>Gateway: 192.168.100.1
@@ -288,35 +325,35 @@ sequenceDiagram
 
 ### DBA Profile (ID 12)
 
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| Profile ID | 12 | Identificador único |
-| Profile Name | ftthdba | Nombre descriptivo |
-| Type | 3 (Non-assured) | Sin garantía fija, usa capacidad restante hasta máximo |
-| Assure | 8192 kbps | Ancho de banda garantizado |
-| Max | 20480 kbps | Límite máximo de ancho de banda |
+| Parameter    | Value           | Description                                            |
+| ------------ | --------------- | ------------------------------------------------------ |
+| Profile ID   | 12              | Identificador único                                    |
+| Profile Name | ftthdba         | Nombre descriptivo                                     |
+| Type         | 3 (Non-assured) | Sin garantía fija, usa capacidad restante hasta máximo |
+| Assure       | 8192 kbps       | Ancho de banda garantizado (8 Mbps)                    |
+| Max          | 97280 kbps      | Límite máximo de ancho de banda (95 Mbps)              |
 
 ### Line Profile (ID 3)
 
-| Component | ID | DBA Profile | VLAN Mapping |
-|-----------|-----|-------------|--------------|
-| T-CONT | 4 | 12 | - |
-| GEM Port | 14 | - | 100 |
+| Component | ID | DBA Profile | VLAN Mapping  | Encryption |
+| --------- | -- | ----------- | ------------- | ---------- |
+| T-CONT    | 4  | 12          | -             | OMCI ON    |
+| GEM Port  | 14 | -           | 100           | ON         |
+| GEM Port  | 15 | -           | (Sin asignar) | ON         |
 
 **Características:**
-- Encriptación OMCI habilitada
+- Encriptación OMCI habilitada a nivel de line profile
 - Tipo de tráfico: Ethernet
 - Mapping index: 0
 
 ### Service Profile (ID 3)
 
-| Port Type | Configuration |
-|-----------|---------------|
-| Ethernet | Adaptive (max 8 ports) |
-| POTS | Adaptive |
-| Native VLAN | Concern (considera configuración native VLAN) |
-| MAC Learning | Enable |
-| Transparent Function | Disable |
+| Port Type            | Configuration                                 |
+| -------------------- | --------------------------------------------- |
+| Ethernet             | Adaptive (max 8 ports)                        |
+| Native VLAN          | Concern (considera configuración native VLAN) |
+| Transparent Function | Enable                                        |
+| MAC Learning         | Enable                                        |
 
 ---
 
@@ -335,10 +372,11 @@ EA5800-X2(config)# display service-port all
 INDEX VLAN PORT    F/S/P VPI VCI FLOW FLOW   RX TX STATE
       ID           TYPE           TYPE PARA
 -----------------------------------------------------------
-2     100  gpon    0/1/0 1   14  vlan 100    -  -  up
+4     100  gpon    0/1/0 -   14  vlan 100    200 200 up
+
 ```
 
-**Estado correcto:** STATE = up
+**Estado correcto**: STATE = up, RX/TX = 200 (traffic-table index)
 
 #### Verificar ONT
 
@@ -359,8 +397,16 @@ EA5800-X2(config)# display vlan 100
 ```
 
 **Verificar que aparezcan:**
-- Service virtual port: index 2
-- Standard ports: 0/4/1 (uplink)
+- Service virtual port: index 4
+- Standard ports: 0/3/0, 0/4/1 (uplink)
+
+#### Verificar Interface de Gestión
+```shell
+EA5800-X2(config)# display ip interface brief
+```
+
+Vlanif10: 192.168.10.250/24, Status: UP
+
 
 ### En el Switch
 
@@ -466,19 +512,25 @@ end
 
 ## Características Técnicas Finales
 
-| Parameter | Value |
-|-----------|-------|
-| GPON Wavelength | 1490nm (downstream), 1310nm (upstream) |
-| Maximum Distance | 20 km (máximo estándar GPON) |
-| Actual Distance | 33 m |
-| TX Optical Power | 2.26 dBm |
-| RX Optical Power | -19.66 dBm |
-| Encryption | OMCI Encryption enabled |
-| VLAN ID | 100 |
-| Client Network | 192.168.100.0/24 |
-| DHCP Range | 192.168.100.2 - 192.168.100.253 |
-| Gateway | 192.168.100.1 (MikroTik Router) |
-| ONT Management IP | 192.168.100.254 |
+| Parameter             | Value                                  |
+| --------------------- | -------------------------------------- |
+| GPON Wavelength       | 1490nm (downstream), 1310nm (upstream) |
+| Maximum Distance      | 20 km (máximo estándar GPON)           |
+| Actual Distance       | 33 m                                   |
+| TX Optical Power      | 2.26 dBm                               |
+| RX Optical Power      | -19.66 dBm                             |
+| Encryption            | OMCI Encryption enabled                |
+| VLAN ID               | 100                                    |
+| Client Network        | 192.168.100.0/24                       |
+| DHCP Range            | 192.168.100.2 - 192.168.100.253        |
+| Gateway               | 192.168.100.1 (MikroTik Router)        |
+| ONT Management IP     | 192.168.100.254                        |
+| OLT Management IP     | 192.168.10.250                         |
+| OLT Management VLAN   | 10                                     |
+| Traffic Profile CIR   | 10 Mbps                                |
+| Traffic Profile PIR   | 100 Mbps                               |
+| DBA Assured Bandwidth | 8 Mbps                                 |
+| DBA Maximum Bandwidth | 95 Mbps                                |
 
 ---
 
@@ -488,3 +540,4 @@ end
 - IEEE 802.1Q VLAN Tagging Standard
 - ITU-T G.984 GPON Recommendations
 - Cisco SG350X Administration Guide
+
