@@ -1,0 +1,31 @@
+key "ns1-ns2" {
+    algorithm hmac-sha256;
+    secret "ZI2Tq2NsebXm1D7u5juta3GcwuG/H//y3c3MqwCbPkU=";
+};
+
+server 192.168.20.20 {
+    keys { "ns1-ns2"; };
+};
+
+server 2001:db8:20::20 {
+    keys { "ns1-ns2"; };
+};
+
+zone "gponlab.local" {
+    type slave;
+    masters { 192.168.20.20; 2001:db8:20::20; };
+    file "/var/cache/bind/gponlab.local.dns";
+};
+
+zone "20.168.192.in-addr.arpa" {
+    type slave;
+    masters { 192.168.20.20; 2001:db8:20::20; };
+    file "/var/cache/bind/20.168.192.in-addr.arpa.dns";
+};
+
+zone "0.2.0.0.8.b.d.0.1.0.0.2.ip6.arpa" {
+    type slave;
+    masters { 192.168.20.20; 2001:db8:20::20; };
+    file "/var/cache/bind/0.2.0.0.8.b.d.0.1.0.0.2.ip6.arpa.dns";
+};
+

@@ -1,0 +1,17 @@
+$TTL 604800
+@       IN      SOA     dns1.gponlab.local. admin.gponlab.local. (
+                        2025102101
+                        86400
+                        7200
+                        3600000
+                        604800 )
+@       IN      NS      dns1.gponlab.local.
+@       IN      NS      dns2.gponlab.local.
+
+20      IN      PTR     dns1.gponlab.local.
+21      IN      PTR     dns2.gponlab.local.
+10      IN      PTR     dhcp.gponlab.local.
+
+
+30  IN  PTR graf.local.
+100 IN  PTR clientes-gpon.gponlab.local.

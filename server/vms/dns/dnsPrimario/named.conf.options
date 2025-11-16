@@ -1,0 +1,39 @@
+options {
+    directory "/var/cache/bind";
+    forwarders {
+        8.8.8.8;
+        8.8.4.4;
+        208.67.220.220;
+    };
+    dnssec-validation auto;
+    listen-on port 53 { 192.168.20.20; 127.0.0.1; };
+    listen-on-v6 port 53 { 2001:db8:20::20; ::1; };
+    recursion yes;
+    allow-recursion { trusted-hosts; };
+    allow-query { trusted-hosts; };
+    allow-transfer { secondary-servers; };
+
+
+    dns64 64:ff9b::/96 {
+        clients { any; };
+        mapped { any; };
+        exclude { 0::/3; 2001:db8::/32; };
+	break-dnssec yes;
+    };
+  
+};
+
+acl "trusted-hosts" {
+    localhost;
+    localnets;
+    192.168.20.0/24;
+    2001:db8:20::/64;
+    192.168.100.0/24;
+    192.168.50.0/24;
+    192.168.40.0/24;
+};
+
+acl "secondary-servers" {
+	192.168.20.21;
+};
+

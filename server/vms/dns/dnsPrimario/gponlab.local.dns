@@ -1,0 +1,56 @@
+$TTL 604800
+@       IN      SOA     dns1.gponlab.local. admin.gponlab.local. (
+                        2025110502   ; serial (cambia en cada edición)
+                        86400        ; refresh
+                        7200         ; retry
+                        3600000      ; expire
+                        604800 )     ; minimum
+@       IN      NS      dns1.gponlab.local.
+@       IN      NS      dns2.gponlab.local.
+
+dns1    IN      A       192.168.20.20
+dns2    IN      A       192.168.20.21
+
+dns1    IN      AAAA    2001:db8:20::20
+dns2    IN      AAAA    2001:db8:20::21
+
+
+dhcp    IN      A       192.168.20.2
+dhcp    IN      AAAA    2001:db8:20::10
+
+
+radius  IN  A   192.168.20.30
+radius  IN  AAAA 2001:db8:20::30
+qos     IN  A   192.168.20.50
+qos     IN  AAAA 2001:db8:20::50
+
+graf	IN	A	192.168.20.40
+
+ntp     IN  A   192.168.20.60
+ntp     IN  AAAA 2001:db8:20::60
+
+
+
+
+
+web-server-1     IN  A 192.168.50.10
+web-server-1     IN  AAAA 2001:db8:50::10
+web-server-2	IN	A	192.168.50.11
+web-server-2	IN	AAAA	2001:db8:50::11
+
+load-balancer      IN  A 192.168.50.20
+load-balancer      IN  AAAA 2001:db8:50::20
+www     IN  CNAME load-balancer
+
+
+
+clientes-gpon IN A 192.168.100.1
+clientes-gpon IN AAAA 2001:db8:100::1
+
+
+@	IN	MX	20	mail.gponlab.local
+mail	IN	A	192.168.40.50
+mail	IN	AAAA	2001:db8:40::50
+
+
+
