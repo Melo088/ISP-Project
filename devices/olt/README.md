@@ -42,7 +42,7 @@ graph LR
 | OLT | Huawei EA5800-X2 | GPON Optical Line Terminal | - |
 | ONT | Huawei EG8145V5 | Optical Network Terminal | 192.168.100.254 |
 | Switch | Cisco SG350X-24 | Layer 2/3 Switch | - |
-| Router | MikroTik | Core Router + DHCP Server | 192.168.100.1 |
+| Router | MikroTik | Core Router| 192.168.100.1 |
 
 ---
 
@@ -540,5 +540,6 @@ end
 - IEEE 802.1Q VLAN Tagging Standard
 - ITU-T G.984 GPON Recommendations
 - Cisco SG350X Administration Guide
+
 
 
