@@ -301,6 +301,7 @@ sequenceDiagram
     participant OLT as OLT
     participant SW as Switch
     participant RTR as Router MikroTik
+    participant DHCP as Servidor DHCP (KEA)
 
     PC->>ONT: DHCP Discover (untagged)
     Note over ONT: Native VLAN 100<br/>agrega tag
@@ -308,15 +309,18 @@ sequenceDiagram
     Note over OLT: tag-transform transparent<br/>NO modifica tag
     OLT->>SW: Frame tagged VLAN 100
     SW->>RTR: Frame tagged VLAN 100
-    RTR->>SW: DHCP Offer (192.168.100.x)
+    Note over RTR: DHCP Relay Agent<br/>(retransmite a servidor)
+    RTR->>DHCP: DHCP Discover (retransmitido)
+    DHCP->>RTR: DHCP Offer (192.168.100.x)
+    RTR->>SW: Frame tagged VLAN 100
     SW->>OLT: Frame tagged VLAN 100
     Note over OLT: tag-transform transparent<br/>mantiene tag VLAN 100
     OLT->>ONT: Desencapsula de GEM Port 14
     Note over ONT: Native VLAN 100<br/>remueve tag
     ONT->>PC: DHCP Offer (untagged)
     PC->>ONT: DHCP Request
-    Note over PC,RTR: Proceso continúa hasta asignación IP
-    RTR-->>PC: IP: 192.168.100.x/24<br/>Gateway: 192.168.100.1
+    Note over PC,DHCP: Proceso continúa hasta asignación IP
+    DHCP-->>PC: IP: 192.168.100.x/24<br/>Gateway: 192.168.100.1
 ```
 
 ---
@@ -540,6 +544,7 @@ end
 - IEEE 802.1Q VLAN Tagging Standard
 - ITU-T G.984 GPON Recommendations
 - Cisco SG350X Administration Guide
+
 
 
 
