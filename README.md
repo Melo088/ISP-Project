@@ -120,15 +120,15 @@ La red GPON constituye el segmento de acceso del proyecto, conectando clientes f
 ## Estructura del Repositorio
 
 ```
-proyecto-gpon-infra2/
-├── dispositivos/
+ISP-Project/
+├── devices/
 │   ├── olt/
 │   │
 │   ├── switch/
 │   │
 │   └── router/
 │
-├── servidor/
+├── server/
 │   └── vms/
 │       ├── dhcp/                    # Kea DHCP
 │       ├── dns/                     # BIND9
@@ -137,8 +137,6 @@ proyecto-gpon-infra2/
 │       ├── qos/                     # LibreQoS
 │       ├── smtp/                    # Postfix, Dovecot
 │       └── web/                     # Caddy
-├── direccionamiento/
-├── topologia/
 │
 └── README.md
 ```
