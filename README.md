@@ -1,132 +1,136 @@
-# Proyecto ISP - Infraestructura II
+# Proyecto ISP - Infraestructura GPON
 
 ## Descripción General
-Implementación de una red GPON (Gigabit Passive Optical Network) para entorno académico, integrando dispositivos físicos y servicios virtualizados sobre OpenStack. El proyecto incluye segmentación de red mediante VLANs, servicios core de red, monitoreo, y provisión de servicios a clientes finales.
+Implementación de una red GPON (Gigabit Passive Optical Network) para entorno académico, integrando dispositivos físicos y servicios virtualizados en Ubuntu Server. El proyecto incluye segmentación de red mediante VLANs, servicios core de red, monitoreo, calidad de servicio (QoS), y provisión de servicios a clientes finales.
 
 ## Topología de Red
 
+
 ### Dispositivos Físicos
 
-1. **ONTs** - Optical Network Terminals (clientes finales)
-2. **OLT** - Optical Line Terminal (cabecera GPON)
-3. **Switch** - Switch gestionable con soporte VLAN y trunk
-4. **Router interno** - Router del proyecto con interfaces VLAN
-5. **Router universidad** - Conexión a Internet (Red Universitaria)
-6. **Servidor físico** - Ubuntu con OpenStack para VMs
+| Dispositivo | Modelo | Función |
+|-------------|--------|---------|
+| Router Externo | MikroTik RB3011UiAS-RM | Conexión a Internet |
+| Router Interno | MikroTik CCR2004-16G-2S+PC | Core del proyecto, VLAN routing |
+| Switch | Cisco SG350X-24 | Distribución con soporte VLAN/trunk |
+| OLT | Huawei EA5800-X2 | Cabecera de red GPON |
+| ONT | Huawei EchoLife EG8145V5 | Terminal óptico de cliente |
+| Splitter | FiberHome Celcia | Divisor óptico pasivo |
+| Servidor | Laptop Ubuntu Server 24.04 | Virtualización de servicios |
 
-7. ### Conexiones Físicas
+### Conexiones Físicas
 
-- **ONT ↔ OLT**: Fibra óptica
-- **OLT ↔ Switch**: Ethernet (puerto Gi1/0/1)
-- **Switch ↔ Router interno**: Trunk (puerto Gi1/0/2)
-- **Switch ↔ Servidor**: Trunk (puerto Gi1/0/10)
-- **Router interno ↔ Router universidad**: Ethernet (Gi0/0/0)
+- **Router Externo eth8** → MinisForum Venus LAN2 (QoS)
+- **Router Externo** → **Router Interno eth1**
+- **Router Interno eth2** → **Switch G1/0/2**
+- **Router Interno eth14** → MinisForum Venus LAN1 (QoS)
+- **Switch G1/0/1** → **OLT**
+- **Switch G1/0/10** → **Servidor**
+- **OLT** → **Splitter** → **ONTs** (fibra óptica)
 
 ## Segmentación de Red - VLANs
 
-| VLAN | Nombre            | Subred              | Gateway         | Propósito                                    |
-|------|-------------------|---------------------|-----------------|----------------------------------------------|
-| 10   | Gestion           | 192.168.10.0/24     | 192.168.10.1    | Administración de dispositivos de red        |
-| 20   | Servicios_Core    | 192.168.20.0/24     | 192.168.20.1    | Servicios críticos (DHCP, RADIUS, QoS)       |
-| 30   | Monitoreo         | 192.168.30.0/24     | 192.168.30.1    | Sistemas de monitoreo y métricas             |
-| 40   | Servicios_Red     | 192.168.40.0/24     | 192.168.40.1    | Servicios de infraestructura (DNS, NTP, NAT) |
-| 50   | Web               | 192.168.50.0/24     | 192.168.50.1    | Servidores web y balanceadores               |
-| 100  | Clientes_GPON     | 192.168.100.0/24    | 192.168.100.1   | Clientes finales conectados via GPON         |
+| VLAN | Nombre | Subred | Gateway | Propósito |
+|------|--------|--------|---------|-----------|
+| 10 | Gestión | 192.168.10.0/24 | 192.168.10.1 | Administración de dispositivos |
+| 20 | Servicios_Core | 192.168.20.0/24 | 192.168.20.1 | DHCP, DNS, NTP |
+| 30 | Monitoreo | 192.168.30.0/24 | 192.168.30.1 | Prometheus, Grafana, LibreNMS |
+| 40 | Email | 192.168.40.0/24 | 192.168.40.1 | Postfix, Dovecot |
+| 50 | Web | 192.168.50.0/24 | 192.168.50.1 | Caddy Web y Reverse Proxy |
+| 100 | Clientes_GPON | 192.168.100.0/24 | 192.168.100.1 | Clientes finales ONTs |
 
+## Servicios Virtualizados
 
-## Direccionamiento IP
+Todos los servicios están implementados en máquinas virtuales sobre Ubuntu Server 24.04.
 
-### Dispositivos Físicos
-| Dispositivo          | Interface/VLAN      | Dirección IP       | Máscara         | Descripción              |
-|----------------------|---------------------|--------------------|-----------------|--------------------------|
-| Switch               | VLAN 10             | 192.168.10.254     | 255.255.255.0   | Gestión del switch       |
-| Router interno       | Gi0/0/1.10          | 192.168.10.1       | 255.255.255.0   | Gateway VLAN Gestión     |
-| Router interno       | Gi0/0/1.20          | 192.168.20.1       | 255.255.255.0   | Gateway VLAN Servicios Core |
-| Router interno       | Gi0/0/1.30          | 192.168.30.1       | 255.255.255.0   | Gateway VLAN Monitoreo   |
-| Router interno       | Gi0/0/1.40          | 192.168.40.1       | 255.255.255.0   | Gateway VLAN Servicios Red |
-| Router interno       | Gi0/0/1.50          | 192.168.50.1       | 255.255.255.0   | Gateway VLAN Web         |
-| Router interno       | Gi0/0/1.100         | 192.168.100.1      | 255.255.255.0   | Gateway VLAN Clientes    |
-| Router interno       | Gi0/0/0             | DHCP               | -               | Salida a Internet        |
+### VLAN 20 - Servicios Core
 
-### Máquinas Virtuales (OpenStack)
-| Servicio              | Hostname       | VLAN | Dirección IP      | Descripción                          |
-|-----------------------|----------------|------|-------------------|--------------------------------------|
-| DHCP (KEA)            | vm-dhcp        | 20   | 192.168.20.10     | Servidor DHCP para clientes          |
-| LibreQoS              | vm-qos         | 20   | 192.168.20.20     | Gestión de calidad de servicio       |
-| FreeRADIUS            | vm-radius      | 20   | 192.168.20.30     | Autenticación AAA                    |
-| NAT                   | vm-nat         | 40   | 192.168.40.10     | Network Address Translation          |
-| BIND9 (DNS)           | vm-dns         | 40   | 192.168.40.20     | Servidor DNS                         |
-| Chrony (NTP)          | vm-ntp         | 40   | 192.168.40.30     | Sincronización de tiempo             |
-| LibreNMS              | vm-nms         | 30   | 192.168.30.10     | Monitoreo de red                     |
-| Grafana/Prometheus    | vm-metrics     | 30   | 192.168.30.20     | Visualización de métricas            |
-| Balanceador de Carga  | vm-lb          | 50   | 192.168.50.10     | HAProxy/NGINX balanceador            |
-| Servidor Web          | vm-web         | 50   | 192.168.50.20     | Apache/NGINX servidor web            |
+| Servicio | IP | Puertos | Descripción |
+|----------|----|---------|-|
+| Kea DHCP | 192.168.20.2 | UDP 67-68 (DHCPv4), UDP 546-547 (DHCPv6) | Asignación dinámica de IPs |
+| BIND9 DNS | 192.168.20.20, 192.168.20.21 | TCP/UDP 53 | Resolución de nombres |
+| Chrony NTP | 192.168.20.60 | UDP 123 | Sincronización de tiempo |
 
-### Servicios Core (VLAN 20)
-- **DHCP (KEA)**: Asignación dinámica de IPs a clientes
-- **LibreQoS**: Control de ancho de banda y QoS
-- **FreeRADIUS**: Autenticación, autorización y accounting
+### VLAN 30 - Monitoreo
 
-### Servicios de Red (VLAN 40)
-- **BIND9**: Resolución de nombres de dominio
-- **Chrony**: Sincronización de tiempo NTP
-- **NAT**: Traducción de direcciones para acceso a Internet
+| Servicio | IP | Puertos | Descripción |
+|----------|----|---------|-|
+| Prometheus | 192.168.20.40 | TCP 9090 | Recolección de métricas |
+| Grafana | 192.168.20.40 | TCP 3000 | Visualización de métricas |
+| LibreNMS | 192.168.20.40 | TCP 8000 | Monitoreo SNMP de red |
 
-### Monitoreo (VLAN 30)
-- **LibreNMS**: Monitoreo SNMP de dispositivos de red
-- **Grafana/Prometheus**: Recolección y visualización de métricas
+### VLAN 30 - QoS
 
-### Servicios Web (VLAN 50)
-- **Balanceador de carga**: Distribución de tráfico entre servidores
-- **Servidor Web**: Hosting de aplicaciones y contenido
+| Servicio | IP | Puertos | Descripción |
+|----------|----|---------|-|
+| LibreQoS | 192.168.20.50 | TCP 9123 | Gestión de calidad de servicio |
+
+### VLAN 40 - Email
+
+| Servicio | IP | Puertos | Descripción |
+|----------|----|---------|-|
+| Dovecot | 192.168.40.50 | TCP 143/993 (IMAP/S), TCP 110/995 (POP3/S) | Servidor de correo entrante |
+| Postfix | 192.168.40.50 | TCP 25 (SMTP), TCP 587 (submission), TCP 465 (SMTPS) | Servidor de correo saliente |
+
+### VLAN 50 - Web
+
+| Servicio | IP | Puertos | Descripción |
+|----------|----|---------|-|
+| Caddy Web | 192.168.50.10, 192.168.50.11 | TCP 80, TCP 443 | Servidor web |
+| Caddy Reverse Proxy | 192.168.50.20 | TCP 80, TCP 443 | Proxy inverso |
+
+## Red GPON - VLAN 100
+
+### Direccionamiento Clientes
+
+- **Rango**: 192.168.100.100 - 192.168.100.200
+- **Gateway**: 192.168.100.1
+- **DNS**: 192.168.20.20, 192.168.20.21
+- **DHCP**: Asignado por Kea (192.168.20.2)
+
 
 ## Estructura del Repositorio
 
-```proyecto-gpon-infra2/
-├── dispositivos/                    
-│   ├── olt/                          
-│   │   └── configs/                              
+```
+proyecto-gpon-infra2/
+├── dispositivos/
+│   ├── olt/
 │   │
-│   ├── switch/                       
-│   │   └── configs/
+│   ├── switch/
 │   │
-│   └── router/                       
-│       └── configs/
+│   └── router/
 │
-├── servidor/                        
-│   ├── openstack-config/            
-│   └── vms/                         
-│       ├── dhcp/                 
-│       │   └── config/
-│       │
-│       ├── radius/                 
-│       │   └── config/
-│       │
-│       ├── qos/                     
-│       │   └── config/
-│       │
-│       ├── dns/                    
-│       │   └── config/
-│       │
-│       ├── ntp/                    
-│       │   └── config/
-│       │
-│       ├── monitoreo/              
-│       │   ├── librenms/
-│       │   └── grafana-prometheus/
-│       │
-│       └── web/                      
-│           ├── balanceador/          
-│           └── servidor-web/         
+├── servidor/
+│   └── vms/
+│       ├── dhcp/                    # Kea DHCP
+│       ├── dns/                     # BIND9
+│       ├── ntp/                     # Chrony
+│       ├── monitoreo/
+│       ├── qos/                     # LibreQoS
+│       ├── smtp/
+│       └── web/
+├── direccionamiento/
+├── topologia/
 │
-├── direccionamiento/                 
-│   ├── tabla_ips.md
-│   └── plan_subnetting.md
-│
-├── vlans/                           
-│   └── tabla_vlans.md
-│
-└──  topologia/                        
-    ├── diagrama.png
-    └── descripcion.md
+└── README.md
+```
 
+
+## Tecnologías Utilizadas
+
+- **Virtualización**: KVM/QEMU en Ubuntu Server
+- **Routing**: MikroTik RouterOS
+- **Switching**: Cisco SG350X
+- **GPON**: Huawei OLT/ONT
+- **DHCP**: Kea DHCP Server
+- **DNS**: BIND9
+- **NTP**: Chrony
+- **Web**: Caddy Server
+- **Email**: Postfix + Dovecot
+- **Monitoreo**: LibreNMS, Prometheus, Grafana
+- **QoS**: LibreQoS
+
+---
+
+**Fecha de actualización**: Noviembre 2025  
+**Versión**: 2.0
