@@ -412,3 +412,63 @@ graph LR
     C -->|Auth Response| B
     B -->|Allow/Deny| A
 ```
+
+## Práctica de SMTP
+En este proyecto usaremos Thunderbird para conectarnos a nuestro servidor de correo basado en Postfix (SMTP) y Dovecot (IMAP). El propósito es verificar el correcto funcionamiento del envío y recepción de correos en la infraestructura GPON, permitiendo crear y gestionar los usuarios necesarios para probar todas las funcionalidades del servidor adecuadamente. Thunderbird nos permite configurar fácilmente las opciones del servidor de entrada y salida, así como los puertos utilizados. Para la práctica, se instaló Thunderbird en dos clientes diferentes, asegurando una prueba integral del sistema.
+
+### Que es Thunderbird?
+Thunderbird es un cliente de correo electrónico gratuito, de código abierto y multiplataforma, desarrollado por la Fundación Mozilla. Permite gestionar múltiples cuentas de correo, enviar y recibir mensajes, organizar bandejas de entrada, y acceder a correos almacenados en servidores externos. También brinda seguridad y privacidad mediante conexiones cifradas y soporte para los protocolos POP, IMAP y SMTP, entre otros.
+
+### Instalación y Configuración de Usuarios
+#### Instalación.
+Para la instalación de Thunderbird, visita la página oficial y sigue los pasos que se especifican en la instalación:
+https://www.thunderbird.net/es-ES/thunderbird/all/
+
+Allí podrás descargar la versión adecuada según tu sistema operativo. En este proyecto se utilizó la versión para Windows en los dos Clientes, instalada siguiendo el asistente habitual.
+
+#### Configuración de Usuarios
+En este caso se crearan dos usuarios uno diferente en cada pc cliente, estos usuarios deben ya haber sido creados con anterioridad en el servidor SMTP. En este proyecto se crearon dos usuarios con los siguientes paramentros.
+
+##### Usuario 1
+- Nombre de Usuario: user1
+- Contraseña: pass
+##### Usuario 2
+- Nombre de Usuario: user2
+- Contraseña: pass
+  
+Una vez instalada la aplicación de Thunderbird en los equipos cliente, ábrela para comenzar con la creación del primer usuario. Asegúrate de que el equipo esté conectado a la red del proyecto GPON para que Thunderbird pueda detectar correctamente el servidor de correo configurado.
+
+#### Creación del primer usuario en Thunderbird
+- Al iniciar la creación de la cuenta, introduce tus datos: nombre completo, dirección de correo (por ejemplo, user1@gponlab.local) y al final despues de haber reconocido el servidor y sus configuraciones te pedira la contraseña.
+<img width="988" height="737" alt="image" src="https://github.com/user-attachments/assets/42953a78-289e-4c16-8741-532822d96110" />
+
+- Pulsa el botón Continuar, y Thunderbird buscará automáticamente la configuración del servidor de correos tanto de entrada (IMAP) como de salida (SMTP) con los parámetros definidos en el servidor (IP, puertos, seguridad).
+
+- Si Thunderbird no reconoce la configuración automáticamente, se puede ingresar manualmente la información del servidor, incluyendo IP, puertos y métodos de seguridad.
+
+- Repite este proceso en el segundo equipo para configurar el usuario user2@gponlab.local.
+
+### Prueba
+Con ambos usuarios creados y configurados, la prueba consiste en enviar y recibir mensajes entre ellos, funcionando de manera similar a cualquier proveedor de correo como Gmail u Outlook.
+
+Para enviar un correo, en Thunderbird selecciona Escribir un mensaje nuevo.
+
+<img width="1650" height="874" alt="image" src="https://github.com/user-attachments/assets/97334900-c16a-4164-b630-794a649ef3f2" />
+
+Completa los campos: destinatario (por ejemplo, user2@gponlab.local), asunto y cuerpo del mensaje. También puedes adjuntar archivos multimedia como imágenes o videos.
+
+<img width="950" height="339" alt="image" src="https://github.com/user-attachments/assets/6486b262-2fc0-477b-a006-29029d914397" />
+
+#### Nota Importante sobre Certificados
+El servidor SMTP configurado en esta infraestructura no posee un certificado SSL verificado por una autoridad certificadora confiable, por lo que al intentar enviar un correo, Thunderbird mostrará una advertencia de seguridad.
+Thunderbird permite omitir esta advertencia para continuar con el envío, aunque advierte que hacerlo puede representar un riesgo. Esta configuración es común en entornos de laboratorio o pruebas donde se usan certificados autofirmados como el nuestro.
+
+Al enviar el correo, Thunderbird lo entregará al servidor SMTP en el puerto 587 configurado. El servidor almacenará el mensaje y lo entregará al buzón del usuario destinatario para su lectura a través del servidor IMAP en el mismo servidor.
+
+Para correos dirigidos a destinatarios externos, el servidor SMTP local lo enviará primero al relay de Gmail configurado, que luego se encargará de la entrega final al servidor externo correspondiente.
+
+
+
+
+
+
